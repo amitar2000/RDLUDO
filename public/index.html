@@ -27,9 +27,20 @@
     </div>
     <div id="controls">
       <button id="startBtn">गेम शुरू करें</button>
-      <button id="rollBtn" disabled>🎲 पासा फेंकें</button>
+      <button id="rollBtn" disabled><span class="btnDice" id="btnDice"><span class="pips"></span></span><span>पासा फेंकें</span></button>
+      <button id="muteBtn" title="म्यूज़िक चालू/बंद">🔊</button>
+      <button id="micBtn" title="वॉइस चैट">🎤 वॉइस</button>
     </div>
     <div id="log"></div>
+    <div id="voiceInfo" class="hidden"></div>
+    <div id="chatBox">
+      <div id="chatMsgs"></div>
+      <form id="chatForm" autocomplete="off">
+        <input id="chatInput" placeholder="संदेश लिखें..." maxlength="200">
+        <button type="submit" id="chatSend">भेजें</button>
+      </form>
+    </div>
+    <div id="audioHolder"></div>
   </div>
 
   <script src="/socket.io/socket.io.js"></script>

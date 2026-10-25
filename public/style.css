@@ -115,3 +115,41 @@ button:disabled { opacity: 0.4; cursor: not-allowed; }
 #controls { margin: 14px 0; }
 #controls button { padding: 12px 20px; font-size: 16px; border: none; border-radius: 8px; margin: 4px; }
 #log { max-width: 480px; margin: 0 auto; font-size: 14px; opacity: 0.9; min-height: 40px; }
+
+/* पासा फेंकने के बटन में असली पासा */
+#rollBtn { display: inline-flex; align-items: center; gap: 10px; }
+.btnDice {
+  width: 28px; height: 28px; background: #fff; border: 2px solid #222; border-radius: 6px;
+  position: relative; display: inline-block; box-shadow: 0 2px 3px rgba(0,0,0,0.4);
+}
+.btnDice .pips { position: absolute; inset: 0; }
+.btnDice .pip {
+  position: absolute; width: 5px; height: 5px; background: #222; border-radius: 50%;
+  transform: translate(-50%, -50%);
+}
+#rollBtn:not(:disabled) .btnDice { animation: wiggle 1.2s ease-in-out infinite; }
+@keyframes wiggle {
+  0%, 100% { transform: rotate(-8deg); }
+  50% { transform: rotate(8deg); }
+}
+#muteBtn { padding: 12px 16px; }
+
+/* बीच के बड़े पासे में असली बिंदियाँ */
+#diceFace.pipsface { position: relative; width: 100%; height: 100%; font-size: 0; }
+#diceFace .bigpip {
+  position: absolute; width: 17%; height: 17%; background: #fff; border-radius: 50%;
+  transform: translate(-50%, -50%); box-shadow: 0 1px 2px rgba(0,0,0,0.6);
+}
+#diceBox.yellow #diceFace .bigpip { background: #222; box-shadow: none; }
+
+/* चैट बॉक्स */
+#chatBox { max-width: 480px; margin: 14px auto 0; background: #2a2a40; border-radius: 10px; padding: 8px; text-align: left; }
+#chatMsgs { height: 140px; overflow-y: auto; font-size: 14px; padding: 4px; }
+.cmsg { margin: 3px 0; word-wrap: break-word; }
+.cmsg b { margin-right: 6px; }
+#chatForm { display: flex; gap: 6px; margin-top: 6px; }
+#chatInput { flex: 1; padding: 10px; border-radius: 8px; border: none; font-size: 15px; }
+#chatSend { padding: 10px 14px; border: none; border-radius: 8px; }
+#micBtn.live { background: #e63946; color: #fff; animation: micpulse 1.2s infinite; }
+@keyframes micpulse { 50% { opacity: 0.6; } }
+#voiceInfo { font-size: 13px; margin-top: 6px; opacity: 0.9; }
