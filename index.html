@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ऑनलाइन लूडो</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="lobby">
+    <h1>🎲 ऑनलाइन लूडो</h1>
+    <input id="name" placeholder="आपका नाम" maxlength="15">
+    <input id="code" placeholder="रूम कोड (जैसे ABC)" maxlength="10">
+    <button id="joinBtn">रूम में जुड़ें</button>
+    <p class="hint">दोस्तों को वही रूम कोड बताएँ। सब जुड़ जाएँ तो शुरू करें।</p>
+  </div>
+
+  <div id="game" class="hidden">
+    <div id="topbar">
+      <span id="roomInfo"></span>
+      <span id="youInfo"></span>
+    </div>
+    <div id="players"></div>
+    <div id="board"></div>
+    <div id="controls">
+      <button id="startBtn">गेम शुरू करें</button>
+      <button id="rollBtn" disabled>🎲 पासा फेंकें</button>
+      <div id="diceView">-</div>
+    </div>
+    <div id="log"></div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="client.js"></script>
+</body>
+</html>
