@@ -7,59 +7,111 @@ body {
   padding: 12px;
   text-align: center;
 }
-.hidden { display: none; }
+.hidden { display: none !important; }
 #lobby { max-width: 340px; margin: 60px auto; }
 #lobby input, #lobby button {
   display: block; width: 100%; padding: 12px;
   margin: 10px 0; font-size: 16px; border-radius: 8px; border: none;
 }
-button {
-  background: #ffb703; color: #222; font-weight: bold; cursor: pointer;
-}
+button { background: #ffb703; color: #222; font-weight: bold; cursor: pointer; }
 button:disabled { opacity: 0.4; cursor: not-allowed; }
 .hint { font-size: 13px; opacity: 0.7; }
 
 #topbar { display: flex; justify-content: space-between; max-width: 480px; margin: 0 auto 8px; }
 #players { margin: 8px 0; }
-.pchip {
-  display: inline-block; padding: 4px 10px; margin: 2px;
-  border-radius: 14px; font-size: 13px; color: #fff;
-}
+.pchip { display: inline-block; padding: 4px 10px; margin: 2px; border-radius: 14px; font-size: 13px; color: #fff; }
 .pchip.active { outline: 3px solid #fff; }
 
+#boardWrap { position: relative; width: min(94vw, 500px); height: min(94vw, 500px); margin: 0 auto; }
 #board {
-  position: relative;
-  width: min(92vw, 480px);
-  height: min(92vw, 480px);
-  margin: 0 auto;
-  background: #fafafa;
-  border-radius: 8px;
-}
-.cell { position: absolute; width: 6.66%; height: 6.66%; border: 1px solid #ccc; }
-.cell.safe { background: #ffe9a8; }
-.yard { position: absolute; width: 40%; height: 40%; border-radius: 10px; opacity: 0.85; }
-.yard.red { background: #e63946; top: 0; left: 0; }
-.yard.green { background: #2a9d8f; top: 0; right: 0; }
-.yard.blue { background: #457b9d; bottom: 0; left: 0; }
-.yard.yellow { background: #f4a261; bottom: 0; right: 0; }
-.center {
-  position: absolute; top: 40%; left: 40%; width: 20%; height: 20%;
-  background: #888;
+  position: absolute; inset: 0;
+  background: #fff;
+  border: 4px solid #222;
+  border-radius: 10px;
+  overflow: hidden;
 }
 
-.piece {
-  position: absolute; width: 5%; height: 5%; border-radius: 50%;
-  border: 2px solid #000; transition: all 0.3s;
-  transform: translate(-50%, -50%);
+/* चार बड़े रंगीन घर */
+.yard { position: absolute; width: 40%; height: 40%; }
+.yard.red    { background: #e63946; top: 0; left: 0; }
+.yard.green  { background: #2a9d8f; top: 0; right: 0; }
+.yard.blue   { background: #3a7bd5; bottom: 0; left: 0; }
+.yard.yellow { background: #f4c20d; bottom: 0; right: 0; }
+.yard-inner {
+  position: absolute; left: 15%; top: 15%; width: 70%; height: 70%;
+  background: #fff; border-radius: 12px; border: 3px solid rgba(0,0,0,0.35);
 }
-.piece.red { background: #e63946; }
-.piece.green { background: #2a9d8f; }
-.piece.yellow { background: #f4a261; }
-.piece.blue { background: #457b9d; }
-.piece.movable { cursor: pointer; box-shadow: 0 0 10px 4px #fff; animation: pulse 0.8s infinite; }
+.yard-dot {
+  position: absolute; width: 22%; height: 22%; border-radius: 50%;
+  border: 3px solid rgba(0,0,0,0.3); transform: translate(-50%, -50%);
+}
+.yard.red .yard-dot { background: #f7a1a8; }
+.yard.green .yard-dot { background: #94d6cd; }
+.yard.blue .yard-dot { background: #a5c4ee; }
+.yard.yellow .yard-dot { background: #fbe38a; }
+
+/* खाने */
+.cell { position: absolute; width: 6.6667%; height: 6.6667%; border: 1px solid #555; background: #fff; display:flex; align-items:center; justify-content:center; font-size: 11px; line-height:1; }
+.cell.safe { background: #fff3c4; }
+.cell.red { background: #e63946; }
+.cell.green { background: #2a9d8f; }
+.cell.yellow { background: #f4c20d; }
+.cell.blue { background: #3a7bd5; }
+.cell.startcell { box-shadow: inset 0 0 0 2px rgba(0,0,0,0.5); }
+
+/* बीच का त्रिकोण वाला हिस्सा */
+.center {
+  position: absolute; left: 40%; top: 40%; width: 20%; height: 20%;
+  background:
+    conic-gradient(from 0deg at 50% 50%,
+      #f4c20d 0deg 0deg);
+}
+.center svg { width: 100%; height: 100%; display: block; }
+
+/* गोटियाँ */
+.piece {
+  position: absolute; width: 5.2%; height: 5.2%; border-radius: 50%;
+  border: 2px solid #111;
+  transform: translate(-50%, -50%);
+  transition: left 0.22s linear, top 0.22s linear;
+  z-index: 5;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.5), inset 0 -3px 0 rgba(0,0,0,0.25), inset 0 3px 0 rgba(255,255,255,0.35);
+}
+.piece.red    { background: #c1121f; }
+.piece.green  { background: #1f7a6f; }
+.piece.yellow { background: #d9a400; }
+.piece.blue   { background: #1f5bb5; }
+.piece.moving { z-index: 20; transform: translate(-50%, -62%) scale(1.25); }
+.piece.movable { cursor: pointer; box-shadow: 0 0 10px 5px #fff; animation: pulse 0.8s infinite; z-index: 10; }
 @keyframes pulse { 50% { transform: translate(-50%, -50%) scale(1.3); } }
+
+/* बीच में पासा */
+#diceBox {
+  position: absolute; left: 50%; top: 50%;
+  width: 17%; height: 17%;
+  transform: translate(-50%, -50%);
+  z-index: 30;
+  border-radius: 16%;
+  border: 4px solid #111;
+  background: #fff;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 6px 14px rgba(0,0,0,0.6);
+  transition: background 0.2s;
+}
+#diceBox.idle { opacity: 0.85; }
+#diceBox.red    { background: #e63946; }
+#diceBox.green  { background: #2a9d8f; }
+#diceBox.yellow { background: #f4c20d; }
+#diceBox.blue   { background: #3a7bd5; }
+#diceFace { font-size: min(9vw, 44px); font-weight: bold; color: #fff; text-shadow: 0 2px 3px rgba(0,0,0,0.6); }
+#diceBox.yellow #diceFace { color: #222; text-shadow: none; }
+#diceBox.rolling { animation: roll 0.12s linear infinite; }
+@keyframes roll {
+  0%   { transform: translate(-50%, -50%) rotate(0deg) scale(1.05); }
+  50%  { transform: translate(-50%, -50%) rotate(180deg) scale(0.95); }
+  100% { transform: translate(-50%, -50%) rotate(360deg) scale(1.05); }
+}
 
 #controls { margin: 14px 0; }
 #controls button { padding: 12px 20px; font-size: 16px; border: none; border-radius: 8px; margin: 4px; }
-#diceView { font-size: 48px; margin-top: 6px; }
-#log { max-width: 480px; margin: 0 auto; font-size: 14px; opacity: 0.85; min-height: 40px; }
+#log { max-width: 480px; margin: 0 auto; font-size: 14px; opacity: 0.9; min-height: 40px; }
