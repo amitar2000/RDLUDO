@@ -82,8 +82,33 @@ io.on('connection', (socket) => {
 
     if (!rooms[code]) rooms[code] = newRoom(code);
     const room = rooms[code];
+    if (room.expire) { clearTimeout(room.expire); room.expire = null; }
 
-    if (room.started) return socket.emit('error_msg', 'गेम शुरू हो चुका है');
+    // गेम शुरू हो चुका हो तो सिर्फ़ उसी नाम वाला छूटा हुआ खिलाड़ी दोबारा जुड़ सकता है
+    if (room.started) {
+      const ghost = room.players.find(p => p.id === null && p.name === name);
+      if (!ghost) return socket.emit('error_msg', 'गेम शुरू हो चुका है। छूटे हुए खिलाड़ी वही नाम डालकर जुड़ें');
+      ghost.id = socket.id;
+      socket.join(code);
+      socket.data.code = code;
+      socket.data.color = ghost.color;
+      socket.emit('joined', { color: ghost.color, code });
+      socket.emit('chat_history', room.chat || []);
+      broadcast(room, name + ' वापस आ गया! 🎉');
+      return;
+    }
+    // जुड़ने के बाद नाम दोहराने पर भी वही सीट दें
+    const same = room.players.find(p => p.id === null && p.name === name);
+    if (same) {
+      same.id = socket.id;
+      socket.join(code);
+      socket.data.code = code;
+      socket.data.color = same.color;
+      socket.emit('joined', { color: same.color, code });
+      socket.emit('chat_history', room.chat || []);
+      broadcast(room, name + ' वापस आ गया!');
+      return;
+    }
     if (room.players.length >= 4) return socket.emit('error_msg', 'रूम भर चुका है');
 
     const color = COLORS[room.players.length];
@@ -94,6 +119,7 @@ io.on('connection', (socket) => {
     socket.data.color = color;
 
     socket.emit('joined', { color, code });
+    socket.emit('chat_history', room.chat || []);
     broadcast(room, name + ' जुड़ गया (' + color + ')');
   });
 
@@ -143,7 +169,7 @@ io.on('connection', (socket) => {
 
     let msg = '';
     const pos = room.pieces[color][index];
-    room.lastMove = { color, index, from: pos, dice, id: Date.now() };
+    room.lastMove = { color, index, from: pos, dice, id: Date.now(), captured: false };
     if (pos === HOME) {
       room.pieces[color][index] = 0;
     } else {
@@ -161,6 +187,7 @@ io.on('connection', (socket) => {
             if (p >= 0 && p <= 50 && absPos(other.color, p) === abs) {
               room.pieces[other.color][j] = HOME;
               msg = player.name + ' ने ' + other.name + ' की गोटी काट दी!';
+              room.lastMove.captured = true;
             }
           });
         }
@@ -185,10 +212,47 @@ io.on('connection', (socket) => {
     }
   });
 
+
+  // ---------- टेक्स्ट चैट ----------
+  socket.on('chat', (text) => {
+    const room = rooms[socket.data.code];
+    if (!room) return;
+    const p = room.players.find(x => x.id === socket.id);
+    if (!p) return;
+    text = String(text || '').trim().slice(0, 200);
+    if (!text) return;
+    room.chat = room.chat || [];
+    const msg = { name: p.name, color: p.color, text, t: Date.now() };
+    room.chat.push(msg);
+    if (room.chat.length > 50) room.chat.shift();
+    io.to(room.code).emit('chat', msg);
+  });
+
+  // ---------- वॉइस चैट (WebRTC signaling) ----------
+  socket.on('voice_join', () => {
+    const room = rooms[socket.data.code];
+    if (!room) return;
+    room.voice = room.voice || new Set();
+    const others = [...room.voice].filter(id => id !== socket.id);
+    room.voice.add(socket.id);
+    socket.emit('voice_peers', others);
+  });
+  socket.on('voice_signal', ({ to, data }) => {
+    io.to(to).emit('voice_signal', { from: socket.id, data });
+  });
+  socket.on('voice_leave', () => {
+    const room = rooms[socket.data.code];
+    if (room && room.voice) {
+      room.voice.delete(socket.id);
+      socket.to(room.code).emit('voice_gone', socket.id);
+    }
+  });
+
   socket.on('disconnect', () => {
     const code = socket.data.code;
     const room = rooms[code];
     if (!room) return;
+    if (room.voice) { room.voice.delete(socket.id); socket.to(room.code).emit('voice_gone', socket.id); }
     const idx = room.players.findIndex(p => p.id === socket.id);
     if (idx === -1) return;
     const leaving = room.players[idx];
@@ -209,8 +273,12 @@ io.on('connection', (socket) => {
       if (room.players[room.turn] === leaving) nextTurn(room);
     }
 
-    if (room.players.length === 0 || room.players.every(p => p.id === null)) {
-      delete rooms[code];
+    if (room.players.length === 0) { delete rooms[code]; return; }
+    if (room.players.every(p => p.id === null)) {
+      // सब निकल गए: 30 मिनट तक रूम बचाकर रखें ताकि लोग वापस आ सकें
+      room.expire = setTimeout(() => {
+        if (rooms[code] && rooms[code].players.every(p => p.id === null)) delete rooms[code];
+      }, 30 * 60 * 1000);
       return;
     }
     broadcast(room, leaving.name + ' निकल गया');
