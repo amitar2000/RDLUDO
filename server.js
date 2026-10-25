@@ -55,8 +55,11 @@ function publicState(room) {
     pieces: room.pieces,
     turn: room.started ? room.players[room.turn].color : null,
     dice: room.dice,
+    rollColor: room.rollColor || null,
     started: room.started,
     winner: room.winner,
+    lastMove: room.lastMove || null,
+    rollId: room.rollId || 0,
   };
 }
 
@@ -113,6 +116,8 @@ io.on('connection', (socket) => {
     if (room.dice !== null) return socket.emit('error_msg', 'पहले गोटी चलाएँ');
 
     room.dice = Math.floor(Math.random() * 6) + 1;
+    room.rollId = (room.rollId || 0) + 1;
+    room.rollColor = player.color;
     const moves = movablePieces(room, player.color, room.dice);
 
     if (moves.length === 0) {
@@ -138,6 +143,7 @@ io.on('connection', (socket) => {
 
     let msg = '';
     const pos = room.pieces[color][index];
+    room.lastMove = { color, index, from: pos, dice, id: Date.now() };
     if (pos === HOME) {
       room.pieces[color][index] = 0;
     } else {
